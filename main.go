@@ -47,7 +47,7 @@ _gocd() {
     compopt -o filenames
     case $cword in
     1)
-        COMPREPLY=( $(compgen -W "-f -ghq" -- $cur) $(compgen -d -- $cur ) );;
+        COMPREPLY=( $(compgen -W "-f -ghq -h" -- $cur) $(compgen -d -- $cur ) );;
     *)
         COMPREPLY=( $(compgen -d -- $cur) );;
     esac
@@ -64,11 +64,6 @@ var (
 	cdGHQFlag     bool
 	cdHistoryFlag bool
 )
-
-func runCD(format string, a ...interface{}) {
-	dir := fmt.Sprintf(format, a...)
-	fmt.Printf("\\cd %s", dir)
-}
 
 func saveCurrentDir() error {
 	home := os.Getenv("HOME")
@@ -90,7 +85,7 @@ func saveCurrentDir() error {
 		if line == pwd || line == "\n" {
 			continue
 		}
-		fmt.Fprintln(f, bs.Text())
+		fmt.Fprintln(f, line)
 		i++
 	}
 	fmt.Fprintln(f, pwd)
@@ -102,22 +97,30 @@ func cdCmd(args []string) error {
 		return err
 	}
 
-	var target string
-	if len(args) == 0 {
-		target = os.Getenv("HOME")
-	} else {
-		target = args[0]
-	}
-
 	switch {
 	case cdFazzyFlag:
-		runCD("$(find %s -type d | fzf --height 40%% --reverse --preview='')", target)
+		var target string
+		if len(args) == 0 {
+			target = os.Getenv("PWD")
+		} else {
+			target = args[0]
+		}
+		fmt.Printf("\\cd $(find %s -type d | fzf --height 40%% --reverse --preview='')", target)
 	case cdGHQFlag:
-		runCD("$(ghq root)/$(ghq list | fzf --height 40%% --reverse --preview='')")
+		fmt.Printf("GOCD_ROOT=$(ghq root);\n")
+		fmt.Printf("GOCD_TARGET=$(ghq list | fzf --height 40%% --reverse --preview='');\n")
+		fmt.Printf("echo $GOCD_TARGET;\n")
+		fmt.Printf("[ \"${GOCD_TARGET}\" = \"\" ] || \\cd $GOCD_ROOT/$GOCD_TARGET;\n")
 	case cdHistoryFlag:
-		runCD("$(tac ~/.gocd_history | fzf --height 40%% --reverse --preview='')")
+		fmt.Printf("\\cd $(tac ~/.gocd_history | fzf --height 40%% --reverse --preview='' || echo .)")
 	default:
-		runCD(target)
+		var target string
+		if len(args) == 0 {
+			target = os.Getenv("HOME")
+		} else {
+			target = args[0]
+		}
+		fmt.Printf("\\cd %s", target)
 	}
 	return nil
 }
