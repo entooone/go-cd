@@ -105,7 +105,7 @@ func cdCmd(args []string) error {
 		} else {
 			target = args[0]
 		}
-		fmt.Printf("\\cd $(find %s -type d | fzf --height 40%% --reverse --preview='')", target)
+		fmt.Printf("\\cd $(find %s -type d ! -readable -prune -o -type d | fzf -0 --height 40%% --reverse --preview='' || echo .)", target)
 	case cdGHQFlag:
 		fmt.Printf("GOCD_ROOT=$(ghq root);\n")
 		fmt.Printf("GOCD_TARGET=$(ghq list | fzf --height 40%% --reverse --preview='');\n")
