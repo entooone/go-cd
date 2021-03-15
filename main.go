@@ -19,11 +19,11 @@ type command struct {
 
 var subcmds = map[string]command{}
 
-func register(cmd command) {
+func registerSubCommand(cmd command) {
 	subcmds[cmd.flagSet.Name()] = cmd
 }
 
-func handle(name string, args []string) error {
+func handleSubCommand(name string, args []string) error {
 	cmd, ok := subcmds[name]
 	if !ok {
 		return fmt.Errorf("sub command '%s' is not found", name)
@@ -126,7 +126,7 @@ func cdCmd(args []string) error {
 }
 
 func init() {
-	register(command{
+	registerSubCommand(command{
 		flagSet: flag.NewFlagSet("init", flag.ExitOnError),
 		action:  initCmd,
 	})
@@ -135,7 +135,7 @@ func init() {
 	cdFlag.BoolVar(&cdFazzyFlag, "f", false, "")
 	cdFlag.BoolVar(&cdGHQFlag, "ghq", false, "")
 	cdFlag.BoolVar(&cdHistoryFlag, "h", false, "")
-	register(command{
+	registerSubCommand(command{
 		flagSet: cdFlag,
 		action:  cdCmd,
 	})
@@ -145,7 +145,7 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	if len(args) != 0 {
-		if err := handle(args[0], args[1:]); err != nil {
+		if err := handleSubCommand(args[0], args[1:]); err != nil {
 			log.Fatal(err)
 		}
 	}
