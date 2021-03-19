@@ -39,7 +39,7 @@ func handleSubCommand(name string, args []string) error {
 func initCmd(args []string) error {
 	fmt.Printf("%s", strings.TrimSpace(`
 gocd() {
-    eval "$(go-cd cd $@)"
+    eval $(go-cd cd "$@")
 }
 _gocd() {
     local cur prev word cword
@@ -101,18 +101,18 @@ func cdCmd(args []string) error {
 	case cdFazzyFlag:
 		var target string
 		if len(args) == 0 {
-			target = os.Getenv("PWD")
+			target = "."
 		} else {
 			target = args[0]
 		}
-		fmt.Printf("\\cd $(find %s ! -readable -prune -o -type d | fzf -0 --height 40%% --reverse --preview='' || echo .)", target)
+		fmt.Printf("\\cd \"$(find %s ! -readable -prune -o -type d | fzf -0 --height 40%% --reverse --preview='' || echo .)\"", target)
 	case cdGHQFlag:
 		fmt.Printf("GOCD_ROOT=$(ghq root);\n")
 		fmt.Printf("GOCD_TARGET=$(ghq list | fzf --height 40%% --reverse --preview='');\n")
 		fmt.Printf("echo $GOCD_TARGET;\n")
 		fmt.Printf("[ \"${GOCD_TARGET}\" = \"\" ] || \\cd $GOCD_ROOT/$GOCD_TARGET;\n")
 	case cdHistoryFlag:
-		fmt.Printf("\\cd $(tac ~/.gocd_history | fzf --height 40%% --reverse --preview='' || echo .)")
+		fmt.Printf("\\cd \"$(tac ~/.gocd_history | fzf --height 40%% --reverse --preview='' || echo .)\"")
 	default:
 		var target string
 		if len(args) == 0 {
@@ -120,7 +120,7 @@ func cdCmd(args []string) error {
 		} else {
 			target = args[0]
 		}
-		fmt.Printf("\\cd %s", target)
+		fmt.Printf("\\cd \"%s\"", target)
 	}
 	return nil
 }
