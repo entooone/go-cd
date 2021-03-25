@@ -79,6 +79,9 @@ func saveCurrentDir() error {
 	buf := &bytes.Buffer{}
 	io.Copy(buf, f)
 	f.Seek(0, io.SeekStart)
+
+	fmt.Fprintln(f, pwd)
+
 	bs := bufio.NewScanner(buf)
 	for i := 0; bs.Scan() && i < 30; {
 		line := bs.Text()
@@ -88,13 +91,14 @@ func saveCurrentDir() error {
 		fmt.Fprintln(f, line)
 		i++
 	}
-	fmt.Fprintln(f, pwd)
 	return nil
 }
 
 func cdCmd(args []string) error {
-	if err := saveCurrentDir(); err != nil {
-		return err
+	if !cdHistoryFlag {
+		if err := saveCurrentDir(); err != nil {
+			return err
+		}
 	}
 
 	switch {
@@ -112,7 +116,7 @@ func cdCmd(args []string) error {
 		fmt.Printf("echo $GOCD_TARGET;\n")
 		fmt.Printf("[ \"${GOCD_TARGET}\" = \"\" ] || \\cd $GOCD_ROOT/$GOCD_TARGET;\n")
 	case cdHistoryFlag:
-		fmt.Printf("\\cd \"$(tac ~/.gocd_history | fzf --height 40%% --reverse --preview='' || echo .)\"")
+		fmt.Printf("\\cd \"$(cat ~/.gocd_history | fzf --height 40%% --reverse --preview='' || echo .)\"")
 	default:
 		var target string
 		if len(args) == 0 {
